@@ -20,12 +20,12 @@ implementing Hindley-Milner is a bit above my pay grade at the moment, so I have
 probably stick with something less sophisticated.
 
 ## What's next?
-[x] Basic expression/statement parser
-[ ] Basic semantic analysis
-[ ] Symbol resolution and symbolic analysis
-[ ] Type inference
-[ ] Type checking
-[ ] Codegen via LLVM IR
+- [x] Basic expression/statement parser
+- [ ] Basic semantic analysis
+- [ ] Symbol resolution and symbolic analysis
+- [ ] Type inference
+- [ ] Type checking
+- [ ] Codegen via LLVM IR
 
 After these are done I'm going to expand the language a bit - implementing a heap allocator will probably be the
 next big priority. Then I want to focus on some really basic growable types (namely `String`s) and a small standard library.
