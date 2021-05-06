@@ -1,0 +1,2 @@
+[workspace]
+members = ["ast", "dusc", "lexer", "parser", "prompt"]
