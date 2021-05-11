@@ -37,7 +37,7 @@ impl<'i> ItemParser<'i> for FunctionParser {
                 parser.consume()?;
                 None
             }
-            _ => return Err(ParseError::unexpected_token(&next_token)),
+            _ => return Err(ParseError::unexpected_token(next_token.kind)),
         };
 
         let result = AstNode::Function {

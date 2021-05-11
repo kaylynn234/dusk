@@ -1,7 +1,13 @@
+use crate::package::Package;
+
+use self::package::PackageKind;
+
+use anyhow::Result;
 use clap::{crate_authors, crate_version, App, Arg};
 use std::path::PathBuf;
 
-pub mod symbols;
+pub mod package;
+pub mod resolution;
 
 fn main() {
     let exit_code = match run() {
@@ -12,7 +18,7 @@ fn main() {
     std::process::exit(exit_code)
 }
 
-fn run() -> Result<(), ()> {
+fn run() -> Result<()> {
     let matches = App::new("dusc")
         .version(crate_version!())
         .author(crate_authors!())
@@ -33,24 +39,15 @@ fn run() -> Result<(), ()> {
         .get_matches();
 
     // Unwrapping here is safe since these arguments are required or have default values.
-    let mut package_root = PathBuf::from(matches.value_of_os("file").unwrap());
-    let package_type = matches.value_of("package").unwrap();
+    let package_root = PathBuf::from(matches.value_of_os("file").unwrap());
+    let package_type = match matches.value_of("type").unwrap() {
+        "binary" => PackageKind::Binary,
+        "library" => PackageKind::Library,
+        _ => unreachable!(),
+    };
 
-    if package_root.is_dir() {
-        package_root.push("/main.dusk");
-    }
-
-    if !package_root.exists() {
-        eprintln!(
-            "error: the referenced path (\"{}\") does not exist",
-            package_root.to_string_lossy()
-        );
-
-        return Err(());
-    }
-
-    // TODO: Everything else. Need to build a module tree. Add that to the parser and then extract into a recursive
-    // function here.
+    let mut package = Package::new(package_type);
+    package.build_module_tree(package_root)?;
 
     Ok(())
 }

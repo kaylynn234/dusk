@@ -5,6 +5,8 @@ authors = ["Kaylynn <mkaylynn7@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+anyhow = "1.0.40"
+ast = { path = "../ast" }
 colored = "2"
 clap = "2.33.3"
 parser = { path = "../parser" }

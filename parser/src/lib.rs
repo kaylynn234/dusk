@@ -51,7 +51,7 @@ impl<'i> Parser<'i> {
         self.tokens
             .get(index)
             .cloned()
-            .ok_or_else(ParseError::end_of_input)
+            .ok_or_else(ParseError::eof)
     }
 
     /// Returns `true` if the parser is at EOF.
@@ -82,16 +82,13 @@ impl<'i> Parser<'i> {
         // TODO: Proper error.
         let token = self
             .peek()
-            .map_err(|_| ParseError::with(format!("Expected {}, but reached EOF", expected)))?;
+            .map_err(|_| ParseError::expected(expected, None))?;
 
         if token.kind == expected {
             self.cursor += 1;
             Ok(token)
         } else {
-            Err(ParseError::with(format!(
-                "Expected {}, but found {} instead",
-                expected, token.kind
-            ))) // TODO: Proper error
+            Err(ParseError::expected(expected, Some(token.kind))) // TODO: Proper error
         }
     }
 
@@ -128,7 +125,7 @@ impl<'i> Parser<'i> {
         // TODO: proper errors. this consume call is probably fine though
         let token = self.consume()?;
         let prefix_parser =
-            get_prefix_parser(&token).ok_or_else(|| ParseError::unexpected_token(&token))?;
+            get_prefix_parser(&token).ok_or_else(|| ParseError::unexpected_token(token.kind))?;
         let mut left = prefix_parser.parse(self, token)?;
 
         while let Some(token) = self.next_token_with(current_precedence) {

@@ -15,11 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     println!("{:#?}", node)
                 }
             }
-            Err(error) => println!(
-                "{}: {}",
-                "Error while parsing".red(),
-                error.context.normal()
-            ),
+            Err(error) => println!("{}: {}", "Error while parsing".red(), error),
         }
     }
 }
