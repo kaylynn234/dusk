@@ -1,12 +1,10 @@
-use crate::package::Package;
-
-use self::package::PackageKind;
+use crate::meta::package::{Package, PackageKind};
 
 use anyhow::Result;
 use clap::{crate_authors, crate_version, App, Arg};
 use std::path::PathBuf;
 
-pub mod package;
+pub mod meta;
 pub mod resolution;
 
 fn main() {
