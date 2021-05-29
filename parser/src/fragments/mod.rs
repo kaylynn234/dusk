@@ -64,25 +64,25 @@ pub trait ItemParser<'i>: Debug {
 
 pub fn get_prefix_parser<'i>(token: &SpanToken<'i>) -> Option<&'i dyn PrefixParser<'i>> {
     match token.kind {
-        Token::SymbolLeftParen => Some(&ParenthesizedExpressionParser),
         token_category![UnaryOperator] => Some(&UnaryParser),
         token_category![Atom] => Some(&AtomParser),
+        Token::SymbolLeftParen => Some(&ParenthesizedExpressionParser),
         _ => None,
     }
 }
 
 pub fn get_infix_parser<'i>(token: &SpanToken<'i>) -> Option<&'i dyn InfixParser<'i>> {
     match token.kind {
+        token_category![Path] => Some(&PathParser),
         Token::SymbolLeftParen => Some(&CallParser),
         Token::SymbolEquals => Some(&ValueAssignmentParser),
         Token::SymbolComma => Some(&SequenceParser),
         Token::SymbolColon => Some(&PairParser),
-        Token::SymbolDot => Some(&PathParser),
-        Token::KeywordOr => Some(&BOOLEAN_OR_PARSER),
-        Token::KeywordAnd => Some(&BOOLEAN_AND_PARSER),
         token_category![ValueComparison] => Some(&COMPARISON_PARSER),
         token_category![Sum] => Some(&SUM_PARSER),
         token_category![Product] => Some(&PRODUCT_PARSER),
+        Token::KeywordOr => Some(&BOOLEAN_OR_PARSER),
+        Token::KeywordAnd => Some(&BOOLEAN_AND_PARSER),
         _ => None,
     }
 }

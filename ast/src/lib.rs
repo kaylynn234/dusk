@@ -8,19 +8,6 @@ pub enum UnaryOperator {
     Negative,
 }
 
-impl TryFrom<Token> for UnaryOperator {
-    type Error = ();
-
-    fn try_from(value: Token) -> Result<Self, Self::Error> {
-        match value {
-            Token::KeywordNot => Ok(UnaryOperator::Not),
-            Token::SymbolPlus => Ok(UnaryOperator::Positive),
-            Token::SymbolMinus => Ok(UnaryOperator::Negative),
-            _ => Err(()),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BinaryOperator {
     Addition,
@@ -37,28 +24,6 @@ pub enum BinaryOperator {
     Or,
 }
 
-impl TryFrom<Token> for BinaryOperator {
-    type Error = ();
-
-    fn try_from(value: Token) -> Result<Self, Self::Error> {
-        match value {
-            Token::SymbolPlus => Ok(BinaryOperator::Addition),
-            Token::SymbolMinus => Ok(BinaryOperator::Subtraction),
-            Token::SymbolAsterisk => Ok(BinaryOperator::Multiplication),
-            Token::SymbolSlash => Ok(BinaryOperator::Division),
-            Token::SymbolLesser => Ok(BinaryOperator::LessThan),
-            Token::SymbolLesserEqual => Ok(BinaryOperator::LessThanOrEqual),
-            Token::SymbolGreater => Ok(BinaryOperator::GreaterThan),
-            Token::SymbolGreaterEqual => Ok(BinaryOperator::GreaterThanOrEqual),
-            Token::SymbolEqualsEquals => Ok(BinaryOperator::Equal),
-            Token::SymbolNotEqual => Ok(BinaryOperator::NotEqual),
-            Token::KeywordAnd => Ok(BinaryOperator::And),
-            Token::KeywordOr => Ok(BinaryOperator::Or),
-            _ => Err(()),
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Eq)]
 pub enum AssignmentType {
     // `global x = 2;`
@@ -67,6 +32,14 @@ pub enum AssignmentType {
     Scope,
     // `x = 2;`
     Value,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum PathType {
+    // `.` access
+    Member,
+    // `::` access
+    Scope,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -79,6 +52,7 @@ pub enum AstNode<'i> {
     Identifier(&'i str),
     Path {
         left: Box<AstNode<'i>>,
+        access: PathType,
         right: Box<AstNode<'i>>,
     },
     // Then simple expressions

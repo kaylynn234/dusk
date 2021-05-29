@@ -37,7 +37,7 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
 
     for (category_name, fields) in results {
         let output_rule = quote! {
-            (#category_name) => {#(#enum_name::#fields)|*};
+            (#category_name) => {#(#enum_name::#fields) |*};
         };
 
         output.push(output_rule);
@@ -51,7 +51,7 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
         }
     };
 
-    println!("{}", tokens);
+    eprintln!("{}", tokens);
 
     tokens.into()
 }

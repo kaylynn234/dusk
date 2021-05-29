@@ -48,10 +48,7 @@ impl<'i> Parser<'i> {
     }
 
     fn get_or_error(&self, index: usize) -> ParseResult<'i, SpanToken<'i>> {
-        self.tokens
-            .get(index)
-            .cloned()
-            .ok_or_else(ParseError::eof)
+        self.tokens.get(index).cloned().ok_or_else(ParseError::eof)
     }
 
     /// Returns `true` if the parser is at EOF.
@@ -62,11 +59,6 @@ impl<'i> Parser<'i> {
     /// Peeks at the current token and returns it. This does not progress the parser.
     pub fn peek(&self) -> ParseResult<'i, SpanToken<'i>> {
         self.get_or_error(self.cursor)
-    }
-
-    /// Peeks at the token `n` positions ahead and returns it. This does not progress the parser.
-    pub fn lookahead(&self, n: usize) -> ParseResult<'i, SpanToken<'i>> {
-        self.get_or_error(self.cursor + n)
     }
 
     /// Consumes the current token and returns it. This progresses the parser.
@@ -140,18 +132,18 @@ impl<'i> Parser<'i> {
 
     pub fn parse_expression(&mut self) -> ParseResult<'i> {
         let result = self.parse_expression_with(Precedence::Start as usize)?;
-        self.expect(Token::SymbolSemicolon)?;
+        self.expect(Token::Semicolon)?;
 
         Ok(result)
     }
 
     pub fn parse_block(&mut self) -> ParseResult<'i, Vec<AstNode<'i>>> {
-        self.expect(Token::SymbolLeftBrace)?;
+        self.expect(Token::LeftBrace)?;
         let mut results = Vec::new();
 
         loop {
             let token = self.peek()?;
-            if let Token::SymbolRightBrace = token.kind {
+            if let Token::RightBrace = token.kind {
                 // We wouldn't be here if we were at EOF, so the unwrap is safe.
                 self.cursor += 1;
                 break;

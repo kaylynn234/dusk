@@ -4,7 +4,7 @@ use crate::{
     Parser, SpanToken,
 };
 
-use ast::{AssignmentType, AstNode};
+use ast::{AssignmentType, AstNode, PathType};
 use lexer::Token;
 use std::convert::TryInto;
 
@@ -65,12 +65,16 @@ impl<'i> InfixParser<'i> for PathParser {
         left: AstNode<'i>,
         token: SpanToken<'i>,
     ) -> ParseResult<'i> {
-        assert_eq!(token.kind, Token::SymbolDot);
+        let right = parser.parse_expression_with(Precedence::Prefix as usize)?;
+        let access = match token.kind {
+            Token::SymbolDot => PathType::Member,
+            Token::SymbolColonColon => PathType::Scope,
+            _ => unreachable!(),
+        };
 
-        let right = parser
-            .parse_expression_with(Precedence::Postfix as usize - Associativity::Right as usize)?;
         let result = AstNode::Path {
             left: Box::new(left),
+            access,
             right: Box::new(right),
         };
 

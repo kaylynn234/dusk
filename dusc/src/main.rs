@@ -8,11 +8,7 @@ pub mod meta;
 pub mod resolution;
 
 fn main() {
-    let exit_code = match run() {
-        Ok(_) => 0,
-        Err(_) => 1,
-    };
-
+    let exit_code = run().is_ok() as i32;
     std::process::exit(exit_code)
 }
 
@@ -27,18 +23,18 @@ fn run() -> Result<()> {
                 .required(true),
         )
         .arg(
-            Arg::with_name("type")
+            Arg::with_name("package-type")
                 .help("The type of package this is. Binary packages are compiled to executables.")
-                .short("t")
-                .long("type")
+                .long("package-type")
                 .possible_values(&["library", "binary"])
                 .default_value("binary"),
         )
+        .arg(Arg::with_name("extern"))
         .get_matches();
 
     // Unwrapping here is safe since these arguments are required or have default values.
     let package_root = PathBuf::from(matches.value_of_os("file").unwrap());
-    let package_type = match matches.value_of("type").unwrap() {
+    let package_type = match matches.value_of("package-type").unwrap() {
         "binary" => PackageKind::Binary,
         "library" => PackageKind::Library,
         _ => unreachable!(),

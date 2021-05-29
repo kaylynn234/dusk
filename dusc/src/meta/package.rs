@@ -2,7 +2,7 @@ use super::{module::Module, DuskPath, Item, StaticCell};
 
 use anyhow::{bail, Context, Result};
 use ast::AstNode;
-use parser::Parser;
+use parser2::Parser;
 use std::{collections::HashMap, fs, path::PathBuf};
 
 #[derive(Debug)]

@@ -4,138 +4,143 @@ use category_derive::Category;
 use logos::Logos;
 
 #[derive(Category, Logos, Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[repr(u8)]
 pub enum Token {
     #[category(Symbol)]
     #[token("{")]
-    SymbolLeftBrace,
+    OpeningBrace,
 
-    #[category(Symbol)]
+    #[category(Symbol, ClosingBracket)]
     #[token("}")]
-    SymbolRightBrace,
+    ClosingBrace,
 
     #[category(Symbol)]
     #[token("(")]
-    SymbolLeftParen,
+    OpeningParen,
 
-    #[category(Symbol)]
+    #[category(Symbol, ClosingBracket)]
     #[token(")")]
-    SymbolRightParen,
+    ClosingParen,
 
     #[category(Symbol)]
     #[token("[")]
-    SymbolLeftBracket,
+    OpeningBracket,
 
-    #[category(Symbol)]
+    #[category(Symbol, ClosingBracket)]
     #[token("]")]
-    SymbolRightBracket,
+    ClosingBracket,
 
     #[category(Symbol)]
     #[token(",")]
-    SymbolComma,
+    Comma,
 
-    #[category(Symbol)]
+    #[category(Symbol, Path)]
     #[token(".")]
-    SymbolDot,
+    Dot,
 
     #[category(Symbol)]
     #[token(":")]
-    SymbolColon,
+    Colon,
+
+    #[category(Symbol, Path)]
+    #[token("::")]
+    ColonColon,
 
     #[category(Symbol)]
     #[token(";")]
-    SymbolSemicolon,
+    Semicolon,
 
     #[category(Symbol)]
     #[token("->")]
-    SymbolArrow,
+    Arrow,
 
     #[category(Symbol)]
     #[token("#")]
-    SymbolHash,
+    Hash,
 
     #[category(Symbol)]
     #[token("!")]
-    SymbolExclamation,
+    Exclamation,
 
     #[category(Symbol)]
     #[token("=")]
-    SymbolEquals,
+    Equals,
 
     #[category(BinaryOperator, UnaryOperator, Sum)]
     #[token("+")]
-    SymbolPlus,
+    Plus,
 
     #[category(BinaryOperator, UnaryOperator, Sum)]
     #[token("-")]
-    SymbolMinus,
+    Minus,
 
     #[category(BinaryOperator, Product)]
     #[token("*")]
-    SymbolAsterisk,
+    Asterisk,
 
     #[category(BinaryOperator, Product)]
     #[token("/")]
-    SymbolSlash,
+    Slash,
 
     #[category(BinaryOperator, ValueComparison)]
     #[token("<")]
-    SymbolLesser,
+    Lesser,
 
     #[category(BinaryOperator, ValueComparison)]
     #[token("<=")]
-    SymbolLesserEqual,
+    LesserEqual,
 
     #[category(BinaryOperator, ValueComparison)]
     #[token(">")]
-    SymbolGreater,
+    Greater,
 
     #[category(BinaryOperator, ValueComparison)]
     #[token(">=")]
-    SymbolGreaterEqual,
+    GreaterEqual,
 
     #[category(BinaryOperator, ValueComparison)]
     #[token("==")]
-    SymbolEqualsEquals,
+    EqualsEquals,
 
     #[category(BinaryOperator, ValueComparison)]
     #[token("!=")]
-    SymbolNotEqual,
+    NotEqual,
 
     #[category(BinaryOperator)]
     #[token("and")]
-    KeywordAnd,
+    And,
 
     #[category(BinaryOperator)]
     #[token("or")]
-    KeywordOr,
+    Or,
 
     #[category(UnaryOperator)]
     #[token("not")]
-    KeywordNot,
+    Not,
 
     #[category(Keyword)]
     #[token("struct")]
-    KeywordStruct,
+    Struct,
 
     #[category(Keyword)]
     #[token("fn")]
-    KeywordFunction,
+    Function,
 
     #[category(Keyword)]
     #[token("let")]
-    KeywordLet,
+    Let,
 
     #[category(Keyword, Atom)]
     #[token("True")]
-    KeywordTrue,
+    True,
 
     #[category(Keyword, Atom)]
     #[token("False")]
-    KeywordFalse,
+    False,
 
     #[category(Keyword)]
     #[token("module")]
-    KeywordModule,
+    Module,
 
     #[category(Atom)]
     #[regex("[_a-zA-Z]+[_a-zA-Z0-9]*", priority = 2)]
@@ -143,15 +148,15 @@ pub enum Token {
 
     #[category(Atom)]
     #[regex(r#""([^"\\]*(\\.[^"\\]*)*)""#)]
-    LiteralString,
+    String,
 
     #[category(Atom)]
     #[regex(r"[_0-9]+")]
-    LiteralInteger,
+    Integer,
 
     #[category(Atom)]
     #[regex(r"[_0-9]+\.[0-9_]+")]
-    LiteralFloat,
+    Float,
 
     #[regex(r"//[^\n]*", logos::skip)]
     LineComment,
@@ -164,43 +169,44 @@ pub enum Token {
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let as_string = match self {
-            Token::SymbolLeftBrace => "{",
-            Token::SymbolRightBrace => "}",
-            Token::SymbolLeftParen => "(",
-            Token::SymbolRightParen => ")",
-            Token::SymbolLeftBracket => "[",
-            Token::SymbolRightBracket => "]",
-            Token::SymbolComma => ",",
-            Token::SymbolDot => ".",
-            Token::SymbolColon => ":",
-            Token::SymbolSemicolon => ";",
-            Token::SymbolArrow => "->",
-            Token::SymbolHash => "#",
-            Token::SymbolExclamation => "!",
-            Token::SymbolEquals => "=",
-            Token::SymbolPlus => "+",
-            Token::SymbolMinus => "-",
-            Token::SymbolAsterisk => "*",
-            Token::SymbolSlash => "/",
-            Token::SymbolLesser => "<",
-            Token::SymbolLesserEqual => "<=",
-            Token::SymbolGreater => ">",
-            Token::SymbolGreaterEqual => ">=",
-            Token::SymbolEqualsEquals => "==",
-            Token::SymbolNotEqual => "!=",
-            Token::KeywordAnd => "and",
-            Token::KeywordOr => "or",
-            Token::KeywordNot => "not",
-            Token::KeywordStruct => "struct",
-            Token::KeywordFunction => "fn",
-            Token::KeywordLet => "let",
-            Token::KeywordTrue => "True",
-            Token::KeywordFalse => "False",
-            Token::KeywordModule => "module",
+            Token::OpeningBrace => "{",
+            Token::ClosingBrace => "}",
+            Token::OpeningParen => "(",
+            Token::ClosingParen => ")",
+            Token::OpeningBracket => "[",
+            Token::ClosingBracket => "]",
+            Token::Comma => ",",
+            Token::Dot => ".",
+            Token::Colon => ":",
+            Token::ColonColon => "::",
+            Token::Semicolon => ";",
+            Token::Arrow => "->",
+            Token::Hash => "#",
+            Token::Exclamation => "!",
+            Token::Equals => "=",
+            Token::Plus => "+",
+            Token::Minus => "-",
+            Token::Asterisk => "*",
+            Token::Slash => "/",
+            Token::Lesser => "<",
+            Token::LesserEqual => "<=",
+            Token::Greater => ">",
+            Token::GreaterEqual => ">=",
+            Token::EqualsEquals => "==",
+            Token::NotEqual => "!=",
+            Token::And => "and",
+            Token::Or => "or",
+            Token::Not => "not",
+            Token::Struct => "struct",
+            Token::Function => "fn",
+            Token::Let => "let",
+            Token::True => "True",
+            Token::False => "False",
+            Token::Module => "module",
             Token::Identifier => "identifier",
-            Token::LiteralString => "string",
-            Token::LiteralInteger => "integer",
-            Token::LiteralFloat => "float",
+            Token::String => "string",
+            Token::Integer => "integer",
+            Token::Float => "float",
             Token::LineComment => "comment",
             Token::Error => "<error>",
         };
