@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 colored = "2.0.0"
-parser2 = { path = "../parser2" }
+parser = { path = "../parser" }

@@ -32,7 +32,6 @@ pub enum Associativity {
 
 #[inline]
 fn infix_precedence(token: &Token) -> u8 {
-    println!("Getting precedence of {}", token);
     match token {
         Token::Equals => Precedence::Statement as u8,
         Token::Colon => Precedence::Pair as u8,
@@ -116,7 +115,11 @@ impl<'i> Parser<'i> {
     }
 
     pub fn parse_item(&mut self) -> ParseResult {
-        todo!()
+        match self.current()?.kind {
+            Token::Function => self.parse_functiom(),
+            Token::Struct => self.parse_struct(),
+            _ => self.parse_expression(),
+        }
     }
 
     pub fn parse_sequence_with(&mut self, buffer: &mut Vec<AstNode>) -> ParseResult<()> {
@@ -159,12 +162,20 @@ impl<'i> Parser<'i> {
 
     pub fn parse_atom(&mut self, token: &SpanToken) -> ParseResult {
         let result = match token.kind {
-            Token::True => AstNode::Bool(LiteralBool(true)),
-            Token::False => AstNode::Bool(LiteralBool(false)),
-            Token::Integer => AstNode::Integer(LiteralInteger(token.span.clone())),
-            Token::Float => AstNode::Float(LiteralFloat(token.span.clone())),
-            Token::String => AstNode::String(LiteralString(token.span.clone())),
-            Token::Identifier => AstNode::Identifier(Identifier(token.span.clone())),
+            Token::True => AstNode::Bool(LiteralBool { value: true }),
+            Token::False => AstNode::Bool(LiteralBool { value: false }),
+            Token::Integer => AstNode::Integer(LiteralInteger {
+                span: token.span.clone(),
+            }),
+            Token::Float => AstNode::Float(LiteralFloat {
+                span: token.span.clone(),
+            }),
+            Token::String => AstNode::String(LiteralString {
+                span: token.span.clone(),
+            }),
+            Token::Identifier => AstNode::Identifier(Identifier {
+                span: token.span.clone(),
+            }),
             _ => bail_unexpected!(token.kind),
         };
 
@@ -208,7 +219,6 @@ impl<'i> Parser<'i> {
 
         let precedence = infix_precedence(&token.kind);
         let associativity = infix_associativity(&token.kind);
-        println!("Found token {:?} with precedence {}", token, precedence);
         let result = BinaryExpression {
             operator,
             left: Box::new(left),
@@ -222,9 +232,9 @@ impl<'i> Parser<'i> {
         let first = self.parse_expression_with(Precedence::Statement as u8)?;
         let result = match self.current()?.kind {
             Token::Comma => {
-                let mut items = vec![first];
-                self.parse_sequence_with(&mut items)?;
-                AstNode::Tuple(LiteralTuple(items))
+                let mut elements = vec![first];
+                self.parse_sequence_with(&mut elements)?;
+                AstNode::Tuple(LiteralTuple { elements })
             }
             _ => first,
         };
@@ -269,6 +279,64 @@ impl<'i> Parser<'i> {
         };
 
         Ok(AstNode::Assignment(result))
+    }
+
+    pub fn parse_functiom(&mut self) -> ParseResult {
+        self.expect(Token::Function)?;
+        let name = Identifier {
+            span: self.expect_cloned(Token::Identifier)?.span,
+        };
+
+        self.expect(Token::OpeningParen)?;
+        let parameters = match self.current()?.kind {
+            Token::ClosingParen => Vec::new(),
+            _ => self.parse_sequence()?,
+        };
+
+        self.expect(Token::ClosingParen)?;
+        let return_type = match self.current()?.kind {
+            Token::Arrow => {
+                self.advance();
+                let result = Box::new(self.parse_expression_with(Precedence::Statement as u8)?);
+                Some(result)
+            }
+            _ => None,
+        };
+
+        let body = match self.current()?.kind {
+            Token::Semicolon => {
+                self.advance();
+                None
+            }
+            Token::OpeningBrace => Some(self.parse_block()?),
+            token => bail_unexpected!(token),
+        };
+
+        let result = Function {
+            name,
+            parameters,
+            return_type,
+            body,
+        };
+
+        Ok(AstNode::Function(result))
+    }
+
+    pub fn parse_struct(&mut self) -> ParseResult {
+        self.expect(Token::Struct)?;
+        let name = Identifier {
+            span: self.expect_cloned(Token::Identifier)?.span,
+        };
+
+        self.expect(Token::OpeningParen)?;
+        let fields = match self.current()?.kind {
+            Token::ClosingParen => Vec::new(),
+            _ => self.parse_sequence()?,
+        };
+
+        self.expect(Token::ClosingParen)?;
+        let result = Struct { name, fields };
+        Ok(AstNode::Struct(result))
     }
 }
 

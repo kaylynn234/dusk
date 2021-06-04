@@ -4,6 +4,7 @@ use anyhow::Result;
 use clap::{crate_authors, crate_version, App, Arg};
 use std::path::PathBuf;
 
+mod error;
 pub mod meta;
 pub mod resolution;
 
@@ -16,7 +17,7 @@ fn run() -> Result<()> {
     let matches = App::new("dusc")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Dusk programming language compiler")
+        .about("Dusk compiler")
         .arg(
             Arg::with_name("file")
                 .help("The module root or entry point")

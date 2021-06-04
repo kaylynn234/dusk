@@ -1,5 +1,5 @@
 use colored::*;
-use parser2::Parser;
+use parser::Parser;
 use std::{error::Error, io, io::prelude::*};
 
 fn main() -> Result<(), Box<dyn Error>> {

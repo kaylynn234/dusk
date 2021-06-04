@@ -1,15 +1,13 @@
-use super::StaticCell;
-
-use ast::AstNode;
+use parser::AstNode;
 
 #[derive(Debug)]
-pub struct Module<'i> {
-    source: StaticCell<String>,
-    ast: Vec<AstNode<'i>>,
+pub struct Module {
+    source: String,
+    ast: Vec<AstNode>,
 }
 
-impl<'i> Module<'i> {
-    pub fn new(source: StaticCell<String>, ast: Vec<AstNode<'i>>) -> Self {
+impl<'i> Module {
+    pub fn new(source: String, ast: Vec<AstNode>) -> Self {
         Module { source, ast }
     }
 }
