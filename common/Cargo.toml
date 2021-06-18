@@ -1,12 +1,8 @@
 [package]
-name = "dusc"
+name = "common"
 version = "0.1.0"
 authors = ["Kaylynn <mkaylynn7@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-anyhow = "1.0.40"
-clap = "2.33.3"
 colored = "2"
-common = { path = "../common" }
-parser = { path = "../parser" }

@@ -1,4 +1,4 @@
-use super::{Span, SpanToken};
+use super::PartialSpan;
 
 #[derive(Debug)]
 pub struct LiteralBool {
@@ -6,19 +6,19 @@ pub struct LiteralBool {
 }
 #[derive(Debug)]
 pub struct LiteralString {
-    pub span: Span,
+    pub span: PartialSpan,
 }
 #[derive(Debug)]
 pub struct LiteralInteger {
-    pub span: Span,
+    pub span: PartialSpan,
 }
 #[derive(Debug)]
 pub struct LiteralFloat {
-    pub span: Span,
+    pub span: PartialSpan,
 }
 #[derive(Debug)]
 pub struct Identifier {
-    pub span: Span,
+    pub span: PartialSpan,
 }
 
 #[derive(Debug)]
@@ -73,7 +73,7 @@ pub struct BinaryExpression {
 
 #[derive(Debug)]
 pub struct LiteralTuple {
-    pub elements: Vec<AstNode>
+    pub elements: Vec<AstNode>,
 }
 
 #[derive(Debug)]
@@ -147,4 +147,3 @@ pub enum AstNode {
     Struct(Struct),
     Module(Module),
 }
-

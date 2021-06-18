@@ -4,7 +4,6 @@ use anyhow::Result;
 use clap::{crate_authors, crate_version, App, Arg};
 use std::path::PathBuf;
 
-mod error;
 pub mod meta;
 pub mod resolution;
 

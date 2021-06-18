@@ -3,6 +3,11 @@ Dusk is a programming language I've been working on on and off for the past whil
 It's still very much in its infancy (... a quick look through this repo will show that) so don't get too excited just yet.
 There are a lot of bits and pieces scattered around and I'm still not 100% on some of the project structure. Sit tight!
 
+## A quick note
+Dusk currently requires a version of Rust past 1.53 due to the use of or-patterns throughout some of the project.
+Unless you're from the future, this means that you'll need to be on nightly to build or run most of the code here.
+Sorry!
+
 ## What can I do at the moment?
 Not much, really. If you clone the repo and run the following:
 ```sh

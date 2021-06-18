@@ -1,7 +1,7 @@
 use super::{module::Module, DuskPath, Item};
 use anyhow::{bail, Context, Result};
 use parser::{AstNode, Parser};
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
 
 #[derive(Debug)]
 pub enum PackageKind {
@@ -50,11 +50,18 @@ impl Package {
         // This early return will also catch issues with the file not existing. I'm not sure about whether we should
         // catch that here or look for it earlier. Guess we'll see.
 
-        let contents = fs::read_to_string(&path)
-            .with_context(|| format!("Could not open {}", path.to_string_lossy()))
-            .context("Unresolved module")?;
+        let contents = Arc::new(
+            fs::read_to_string(&path)
+                .with_context(|| format!("Could not open {}", path.to_string_lossy()))
+                .context("Unresolved module")?,
+        );
 
-        let parse_result = Parser::new(&contents).parse()?;
+        let printable_stem = path
+            .file_stem()
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_else(|| "<none>".to_owned());
+
+        let parse_result = Parser::new(&contents, printable_stem).parse()?;
 
         // Module declarations are items (top-level statements) so we can just filter like so to check if we need to
         // parse anything else. In the future this may change but for now our lives are easy.
@@ -64,7 +71,7 @@ impl Package {
         });
 
         for submodule in submodules {
-            let submodule_name = &contents[submodule.name.span.clone()];
+            let submodule_name = &contents[submodule.name.span.to_range()];
             let submodule_path = DuskPath::Scope {
                 left: Box::new(parent.clone()),
                 right: Box::new(DuskPath::Name(submodule_name.to_string())),

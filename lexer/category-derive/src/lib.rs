@@ -51,7 +51,5 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
         }
     };
 
-    eprintln!("{}", tokens);
-
     tokens.into()
 }

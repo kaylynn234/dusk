@@ -1,13 +1,14 @@
 use parser::AstNode;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Module {
-    source: String,
+    source: Arc<String>,
     ast: Vec<AstNode>,
 }
 
-impl<'i> Module {
-    pub fn new(source: String, ast: Vec<AstNode>) -> Self {
+impl Module {
+    pub fn new(source: Arc<String>, ast: Vec<AstNode>) -> Self {
         Module { source, ast }
     }
 }
