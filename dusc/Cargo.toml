@@ -10,3 +10,5 @@ clap = "2.33.3"
 colored = "2"
 common = { path = "../common" }
 parser = { path = "../parser" }
+# Hopefully this isn't a mistake.
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
