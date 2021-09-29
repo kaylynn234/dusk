@@ -3,6 +3,9 @@ Dusk is a programming language I've been working on on and off for the past whil
 It's still very much in its infancy (... a quick look through this repo will show that) so don't get too excited just yet.
 There are a lot of bits and pieces scattered around and I'm still not 100% on some of the project structure. Sit tight!
 
+## Here be dragons!
+I'm mid-rewrite at the moment, so currently a couple things aren't present here. Bear with me!
+
 ## A quick note
 Dusk currently requires Rust 1.53+ due to the use of or-patterns and `IntoIterator` for arrays.
 Since 1.53 was recently released, you *should* be able to run everything here on stable now.
@@ -49,14 +52,15 @@ If you're on a *nix system you already know what you're doing.
 </details>
 
 ## What can I do at the moment?
-Not much, really. If you clone the repo and run the following:
+I'm rewriting things, so this isn't here at the moment. Sit tight!  
+~~Not much, really. If you clone the repo and run the following:~~
 ```sh
 cd prompt
 cargo run
 ```
-You'll wind up in a small interactive prompt. All this does at the moment is run the parser on a snippet of code and
+~~You'll wind up in a small interactive prompt. All this does at the moment is run the parser on a snippet of code and
 print the resulting AST to stdout, but its capabilities will grow in the future. I'm hoping that eventually I'll be
-able to turn it into something similar to `GHCI` or `iex`.
+able to turn it into something similar to `GHCI` or `iex`.~~
 
 ## Where is this going to go?
 I have a lot of big ambitions but I decided that it was better to start small for the time being. Later down the track
@@ -65,7 +69,7 @@ implementing Hindley-Milner is a bit above my pay grade at the moment, so I have
 probably stick with something less sophisticated.
 
 ## What's next?
-- [x] Basic expression/statement parser
+- [ ] Basic expression/statement parser
 - [ ] Basic semantic analysis
 - [ ] Symbol resolution and symbolic analysis
 - [ ] Type inference

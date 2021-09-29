@@ -1,5 +1,5 @@
 [workspace]
-members = ["common", "dusc", "lexer", "parser", "prompt"]
+members = ["lexer", "parser"]
 
 [profile.release]
 lto = true

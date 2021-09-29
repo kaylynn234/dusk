@@ -1,48 +1,32 @@
-use super::PartialSpan;
+use crate::{span::Span, visitor::Visitor};
+use visitor_derive::Visitor;
 
-#[derive(Debug)]
-pub struct LiteralBool {
-    pub value: bool,
-}
-#[derive(Debug)]
-pub struct LiteralString {
-    pub span: PartialSpan,
-}
-#[derive(Debug)]
-pub struct LiteralInteger {
-    pub span: PartialSpan,
-}
-#[derive(Debug)]
-pub struct LiteralFloat {
-    pub span: PartialSpan,
-}
-#[derive(Debug)]
-pub struct Identifier {
-    pub span: PartialSpan,
+#[derive(Debug, Clone, Visitor)]
+#[visit(node = Expression)]
+pub struct UnaryExpression {
+    pub operator: UnaryOperator,
+    #[visit]
+    pub operand: Box<Expression>,
 }
 
-#[derive(Debug)]
-pub enum PathAccess {
-    // `::` access
-    Scope,
-    // `.` access
-    Member,
-}
-
-#[derive(Debug)]
-pub struct Path {
-    pub first: Box<AstNode>,
-    pub rest: Vec<(PathAccess, Identifier)>,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UnaryOperator {
     Not,
     Positive,
     Negative,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Visitor)]
+#[visit(node = Expression)]
+pub struct BinaryExpression {
+    pub operator: BinaryOperator,
+    #[visit]
+    pub left: Box<Expression>,
+    #[visit]
+    pub right: Box<Expression>,
+}
+
+#[derive(Debug, Clone)]
 pub enum BinaryOperator {
     Add,
     Subtract,
@@ -58,92 +42,87 @@ pub enum BinaryOperator {
     Or,
 }
 
-#[derive(Debug)]
-pub struct UnaryExpression {
-    pub operator: UnaryOperator,
-    pub operand: Box<AstNode>,
+#[derive(Debug, Clone, Visitor)]
+#[visit(node = Expression)]
+pub struct IsExpression {
+    #[visit]
+    pub expression: Box<Expression>,
+    pub pattern: Pattern,
 }
 
-#[derive(Debug)]
-pub struct BinaryExpression {
-    pub operator: BinaryOperator,
-    pub left: Box<AstNode>,
-    pub right: Box<AstNode>,
+#[derive(Debug, Clone, Visitor)]
+#[visit(node = Expression)]
+pub struct BlockExpression {
+    #[visit]
+    pub statements: Vec<Expression>,
+    #[visit]
+    pub tail: Option<Box<Expression>>,
 }
 
-#[derive(Debug)]
-pub struct LiteralTuple {
-    pub elements: Vec<AstNode>,
+macro_rules! literal_impl {
+    ($($vis:vis $name:ident,)+) => { literal_impl! { $($vis $name),* } };
+    ($($vis:vis $name:ident),*) => {
+        $(
+            #[derive(Debug, Clone)]
+            $vis struct $name(Span);
+
+            impl $name {
+                $vis fn span(&self) -> Span {
+                    self.0
+                }
+            }
+        )*
+    };
 }
 
-#[derive(Debug)]
-pub struct Pair {
-    pub left: Box<AstNode>,
-    pub right: Box<AstNode>,
+literal_impl! {
+    pub IntegerLiteral,
+    pub FloatLiteral,
+    pub StringLiteral,
 }
 
-#[derive(Debug)]
-pub struct Call {
-    pub subject: Box<AstNode>,
-    pub arguments: Vec<AstNode>,
+#[derive(Debug, Clone)]
+pub struct BoolLiteral(Span, bool);
+
+impl BoolLiteral {
+    pub fn span(&self) -> Span {
+        self.0
+    }
+
+    pub fn value(&self) -> bool {
+        self.1
+    }
 }
 
-#[derive(Debug)]
-pub enum AssignmentType {
-    Value,
-    Scope,
+#[derive(Debug, Clone)]
+pub enum LiteralExpression {
+    Integer(IntegerLiteral),
+    Float(FloatLiteral),
+    String(StringLiteral),
 }
 
-#[derive(Debug)]
-pub struct Assignment {
-    pub ty: AssignmentType,
-    pub pattern: Box<AstNode>,
-    pub value: Box<AstNode>,
-}
-
-#[derive(Debug)]
-pub struct Function {
-    pub name: Identifier,
-    pub parameters: Vec<AstNode>,
-    pub return_type: Option<Box<AstNode>>,
-    pub body: Option<Vec<AstNode>>,
-}
-
-#[derive(Debug)]
-pub struct Struct {
-    pub name: Identifier,
-    pub fields: Vec<AstNode>,
-}
-
-#[derive(Debug)]
-pub struct Module {
-    pub name: Identifier,
-}
-
-#[derive(Debug)]
-pub enum AstNode {
-    // Literals & atoms
-    Bool(LiteralBool),
-    String(LiteralString),
-    Integer(LiteralInteger),
-    Float(LiteralFloat),
-    Identifier(Identifier),
-    Path(Path),
-    // Simple expressions
+#[derive(Debug, Clone, Visitor)]
+#[visit(base)]
+pub enum Expression {
     Unary(UnaryExpression),
     Binary(BinaryExpression),
-    // Collection literals
-    Tuple(LiteralTuple),
-    // ...
-    Pair(Pair),
-    // Postfix expressions - slicing, indexing and calls.
-    Call(Call),
-    // ....
-    // Statements
-    Assignment(Assignment),
-    // Items
-    // ....
-    Function(Function),
-    Struct(Struct),
-    Module(Module),
+    Is(IsExpression),
+    Block(BlockExpression),
+    Literal(LiteralExpression),
+}
+
+#[derive(Debug, Clone, Visitor)]
+#[visit(base)]
+pub enum Pattern {}
+
+#[derive(Debug, Clone, Visitor)]
+#[visit(base)]
+pub enum AstNode {}
+
+#[derive(Debug, Clone)]
+pub enum PathAccess {
+    // `::` access
+    Scope,
+    // `.` access
+    Member,
 }

@@ -5,5 +5,5 @@ authors = ["Kaylynn <mkaylynn7@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-category_derive = { path = "category-derive" }
+token_macro_derive = { path = "token-macro-derive" }
 logos = "0.12.0"

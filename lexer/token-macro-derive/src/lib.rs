@@ -3,13 +3,13 @@ use quote::quote;
 use std::collections::HashMap;
 use syn::{punctuated::Punctuated, Ident, ItemEnum, Token};
 
-#[proc_macro_derive(Category, attributes(category))]
-pub fn category_derive(input: TokenStream) -> TokenStream {
-    let mut results = HashMap::new();
-    let item: ItemEnum = syn::parse(input).expect("`Category` can only be derived for enums");
+#[proc_macro_derive(TokenInfo, attributes(category, symbol))]
+pub fn token_info_derive(input: TokenStream) -> TokenStream {
+    let mut category_results = HashMap::new();
+    let item: ItemEnum = syn::parse(input).expect("`TokenInfo` can only be derived for enums");
 
     if item.variants.is_empty() {
-        panic!("Cannot derive `Category` on an empty enum")
+        panic!("Cannot derive `TokenInfo` on an empty enum")
     }
 
     for variant in item.variants {
@@ -24,7 +24,7 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
 
         if let Some(category_names) = helper_attr {
             for category_name in category_names {
-                results
+                category_results
                     .entry(category_name)
                     .or_insert_with(Vec::new)
                     .push(variant.ident.clone())
@@ -33,21 +33,23 @@ pub fn category_derive(input: TokenStream) -> TokenStream {
     }
 
     let enum_name = item.ident;
-    let mut output = Vec::new();
+    let mut category_output = Vec::new();
 
-    for (category_name, fields) in results {
+    for (category_name, fields) in category_results {
         let output_rule = quote! {
             (#category_name) => {#(#enum_name::#fields) |*};
         };
 
-        output.push(output_rule);
+        category_output.push(output_rule);
     }
 
-    let macro_name = quote::format_ident!("{}_category", enum_name.to_string().to_lowercase());
+    let lower_name = enum_name.to_string().to_lowercase();
+    let category_macro_name = quote::format_ident!("{}_category", lower_name);
+
     let tokens = quote! {
         #[macro_export]
-        macro_rules! #macro_name {
-            #(#output)*
+        macro_rules! #category_macro_name {
+            #(#category_output)*
         }
     };
 

@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
-use category_derive::Category;
 use logos::Logos;
+use token_macro_derive::TokenInfo;
 
-#[derive(Category, Logos, Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(TokenInfo, Logos, Debug, PartialEq, Eq, Clone, Copy, Hash)]
 #[repr(u8)]
 pub enum Token {
     #[category(Symbol)]
@@ -55,6 +55,10 @@ pub enum Token {
     Arrow,
 
     #[category(Symbol)]
+    #[token("=>")]
+    FatArrow,
+
+    #[category(Symbol)]
     #[token("#")]
     Hash,
 
@@ -65,6 +69,22 @@ pub enum Token {
     #[category(Symbol)]
     #[token("=")]
     Equals,
+
+    #[category(CompoundOperator)]
+    #[token("+=")]
+    PlusEquals,
+
+    #[category(CompoundOperator)]
+    #[token("-=")]
+    MinusEquals,
+
+    #[category(CompoundOperator)]
+    #[token("*=")]
+    AsteriskEquals,
+
+    #[category(CompoundOperator)]
+    #[token("/=")]
+    SlashEquals,
 
     #[category(BinaryOperator, UnaryOperator, Sum)]
     #[token("+")]
@@ -118,11 +138,11 @@ pub enum Token {
     #[token("not")]
     Not,
 
-    #[category(Keyword)]
+    #[category(Keyword, ItemKeyword)]
     #[token("struct")]
     Struct,
 
-    #[category(Keyword)]
+    #[category(Keyword, ItemKeyword)]
     #[token("fn")]
     Function,
 
@@ -168,50 +188,54 @@ pub enum Token {
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let as_string = match self {
-            Token::OpeningBrace => "`{`",
-            Token::ClosingBrace => "`}`",
-            Token::OpeningParen => "`(`",
-            Token::ClosingParen => "`)`",
-            Token::OpeningBracket => "`[`",
-            Token::ClosingBracket => "`]`",
-            Token::Comma => "`,`",
-            Token::Dot => "`.`",
-            Token::Colon => "`:`",
-            Token::ColonColon => "`::`",
-            Token::Semicolon => "`;`",
-            Token::Arrow => "`->`",
-            Token::Hash => "`#`",
-            Token::Exclamation => "`!`",
-            Token::Equals => "`=`",
-            Token::Plus => "`+`",
-            Token::Minus => "`-`",
-            Token::Asterisk => "`*`",
-            Token::Slash => "`/`",
-            Token::Lesser => "`<`",
-            Token::LesserEqual => "`<=`",
-            Token::Greater => "`>`",
-            Token::GreaterEqual => "`>=`",
-            Token::EqualsEquals => "`==`",
-            Token::NotEqual => "`!=`",
-            Token::And => "keyword `and`",
-            Token::Or => "keyword `or`",
-            Token::Not => "keyword `not`",
-            Token::Struct => "keyword `struct`",
-            Token::Function => "keyword `fn`",
-            Token::Let => "keyword `let`",
-            Token::True => "keyword `True`",
-            Token::False => "keyword `False`",
-            Token::Module => "keyword `module`",
-            Token::Identifier => "identifier",
-            Token::String => "string",
-            Token::Integer => "integer",
-            Token::Float => "float",
-            Token::LineComment => "comment",
-            Token::Error => "<error>",
-        };
-
-        f.write_str(as_string)
+        use Token::*;
+        f.write_str(match self {
+            OpeningBrace => "`{`",
+            ClosingBrace => "`}`",
+            OpeningParen => "`(`",
+            ClosingParen => "`)`",
+            OpeningBracket => "`[`",
+            ClosingBracket => "`]`",
+            Comma => "`,`",
+            Dot => "`.`",
+            Colon => "`:`",
+            ColonColon => "`::`",
+            Semicolon => "`;`",
+            Arrow => "`->`",
+            FatArrow => "`=>`",
+            Hash => "`#`",
+            Exclamation => "`!`",
+            Equals => "`=`",
+            PlusEquals => "`+=`",
+            MinusEquals => "`-=`",
+            AsteriskEquals => "`*=`",
+            SlashEquals => "`/=`",
+            Plus => "`+`",
+            Minus => "`-`",
+            Asterisk => "`*`",
+            Slash => "`/`",
+            Lesser => "`<`",
+            LesserEqual => "`<=`",
+            Greater => "`>`",
+            GreaterEqual => "`>=`",
+            EqualsEquals => "`==`",
+            NotEqual => "`!=`",
+            And => "keyword `and`",
+            Or => "keyword `or`",
+            Not => "keyword `not`",
+            Struct => "keyword `struct`",
+            Function => "keyword `fn`",
+            Let => "keyword `let`",
+            True => "keyword `True`",
+            False => "keyword `False`",
+            Module => "keyword `module`",
+            Identifier => "identifier",
+            String => "string",
+            Integer => "integer",
+            Float => "float",
+            LineComment => "comment",
+            Error => "<error>",
+        })
     }
 }
 
