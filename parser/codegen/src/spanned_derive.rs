@@ -4,14 +4,19 @@ use quote::{quote, ToTokens};
 use syn::{parse_macro_input, Expr, Item, ItemEnum, ItemStruct, Variant};
 
 pub fn spanned_derive(input: TokenStream) -> TokenStream {
-    let (item_ident, tokens) = match parse_macro_input!(input as Item) {
-        Item::Enum(item) => (item.ident.clone(), impl_enum(&item)),
-        Item::Struct(item) => (item.ident.clone(), impl_struct(&item)),
+    // I don't like this, but I'm not sure if there's a better way.
+    let (item_ident, generics, tokens) = match parse_macro_input!(input as Item) {
+        Item::Enum(item) => (item.ident.clone(), item.generics.clone(), impl_enum(&item)),
+        Item::Struct(item) => (
+            item.ident.clone(),
+            item.generics.clone(),
+            impl_struct(&item),
+        ),
         _ => panic!(),
     };
 
     let tokens = quote! {
-        impl crate::span::Spanned for #item_ident {
+        impl #generics crate::span::Spanned for #item_ident#generics {
             fn span(&self) -> crate::span::Span {
                 #tokens
             }
