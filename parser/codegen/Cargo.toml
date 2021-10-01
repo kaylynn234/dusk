@@ -1,5 +1,5 @@
 [package]
-name = "visitor_derive"
+name = "codegen"
 version = "0.1.0"
 authors = ["Kaylynn <mkaylynn7@gmail.com>"]
 edition = "2018"

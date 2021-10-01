@@ -1,26 +1,22 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{Ident, Item, ItemStruct, Token, TypePath};
+use syn::{Ident, Item, Token, TypePath};
 
-// This module is necessary because exporting items from proc macros is unsupported
-mod keywords {
-    syn::custom_keyword!(base);
-    syn::custom_keyword!(node);
-}
-
-fn parse_node_type_args(input: syn::parse::ParseStream) -> syn::Result<TypePath> {
-    input.parse::<keywords::node>()?;
-    input.parse::<Token![=]>()?;
-    input.parse()
-}
+syn::custom_keyword!(base);
+syn::custom_keyword!(node);
 
 enum Node {
     Visit(TypePath),
     Base,
 }
 
-#[proc_macro_derive(Visitor, attributes(visit))]
+fn parse_node_type_args(input: syn::parse::ParseStream) -> syn::Result<TypePath> {
+    input.parse::<node>()?;
+    input.parse::<Token![=]>()?;
+    input.parse()
+}
+
 pub fn visitor_derive(input: TokenStream) -> TokenStream {
     let item: Item = syn::parse(input).expect("`Visitor` can only be derived for structs or enums");
 
@@ -36,7 +32,7 @@ pub fn visitor_derive(input: TokenStream) -> TokenStream {
     let node = attr
         .parse_args_with(parse_node_type_args)
         .map(Node::Visit)
-        .or_else(|_| attr.parse_args::<keywords::base>().map(|_| Node::Base))
+        .or_else(|_| attr.parse_args::<base>().map(|_| Node::Base))
         .expect("invalid syntax - an attribute of the form `#[visit(node = Type)]` or `#[visit(base)]` is required");
 
     match node {

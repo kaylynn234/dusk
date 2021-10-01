@@ -5,8 +5,7 @@ authors = ["Kaylynn <mkaylynn7@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-common = { path = "../common" }
-visitor_derive = { path = "visitor-derive" }
+codegen = { path = "codegen" }
 lasso = "0.6.0"
 lexer = { path = "../lexer" }
 logos = "0.12.0"

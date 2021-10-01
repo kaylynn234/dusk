@@ -15,8 +15,8 @@ pub mod prelude {
         Diagnostic, DiagnosticToken, Error, ErrorKind, IntoDiagnosticExt, LabelExt, Unlabelled,
     };
     pub use super::span::Span;
-    pub use super::Morph;
     pub use super::Parser;
+    pub use super::Pattern;
 }
 
 #[inline]
@@ -63,27 +63,48 @@ impl Parser<'_> {
         Ok(token)
     }
 
-    pub fn expect_token<T>(&mut self, expected: T) -> Result<T::Output, Error<T::Label>>
+    pub fn peek_matches<T>(&mut self, expected: T) -> Result<T::Output, Error<T::Label>>
     where
-        T: Morph,
+        T: Pattern,
         Error<T::Label>: From<Error<Unlabelled>>,
     {
         let (span, token) = self.peek()?;
-        self.next()?;
-        let slice = &self.source()[self.span().as_range()];
+        let slice = &self.source()[self.span()];
+        Ok(expected.match_pattern(span, token, slice)?.1)
+    }
 
-        Ok(expected.morph(span, token, slice)?.1)
+    pub fn expect_matches<T>(&mut self, expected: T) -> Result<T::Output, Error<T::Label>>
+    where
+        T: Pattern,
+        Error<T::Label>: From<Error<Unlabelled>>,
+    {
+        let (span, token) = self.peek()?;
+        let slice = &self.source()[self.span()];
+        let (_, result) = expected.match_pattern(span, token, slice)?;
+        self.next()?;
+
+        Ok(result)
+    }
+
+    pub fn cursor(&self) -> Cursor {
+        Cursor(self.span().start())
+    }
+
+    pub fn measure(&self, Cursor(start): Cursor) -> Span {
+        Span::new(start, self.span().end())
     }
 }
 
-pub trait Morph {
+pub trait Pattern {
     type Output;
     type Label;
 
-    fn morph(
+    fn match_pattern(
         self,
         span: Span,
         token: Token,
         slice: &str,
     ) -> Result<(Span, Self::Output), Error<Self::Label>>;
 }
+
+pub struct Cursor(usize);

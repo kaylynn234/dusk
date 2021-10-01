@@ -1,5 +1,15 @@
-use std::ops::Range;
+use std::ops::{Index, Range};
 
+/// Represents a type that occupies an input span
+pub trait Spanned {
+    fn span(&self) -> Span;
+}
+
+/// A span, comprised of a start and end, representing a slice of some source input.
+///
+/// # Why is this not Range<usize>?
+///
+/// For some inane reason, `Range<usize>` is not `Copy`. This type is.
 #[derive(Debug, Clone, Copy)]
 pub struct Span {
     start: usize,
@@ -7,7 +17,14 @@ pub struct Span {
 }
 
 impl Span {
+    /// Creates a new span, referring to some portion of source input.
+    ///
+    /// # Panics
+    ///
+    /// This will panic if `end` < `start`, as that would result in an invalid span.
     pub fn new(start: usize, end: usize) -> Self {
+        assert!(end >= start, "span end is higher than start");
+
         Self { start, end }
     }
 
@@ -33,5 +50,13 @@ impl From<Range<usize>> for Span {
 impl Into<Range<usize>> for Span {
     fn into(self) -> Range<usize> {
         self.start..self.end
+    }
+}
+
+impl Index<Span> for str {
+    type Output = str;
+
+    fn index(&self, index: Span) -> &Self::Output {
+        &self[index.as_range()]
     }
 }

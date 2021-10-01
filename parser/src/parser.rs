@@ -1,13 +1,13 @@
 use super::prelude::*;
 use lexer::Token;
 
-impl Morph for Token {
+impl Pattern for Token {
     type Output = Token;
     type Label = Diagnostic;
 
-    fn morph(
+    fn match_pattern(
         self,
-        span: crate::span::Span,
+        span: Span,
         token: Token,
         slice: &str,
     ) -> Result<(Span, Self::Output), Error<Self::Label>> {
@@ -24,13 +24,13 @@ impl Morph for Token {
     }
 }
 
-impl Morph for &str {
+impl Pattern for &str {
     type Output = Token;
     type Label = Diagnostic;
 
-    fn morph(
+    fn match_pattern(
         self,
-        span: crate::span::Span,
+        span: Span,
         token: Token,
         slice: &str,
     ) -> Result<(Span, Self::Output), Error<Self::Label>> {
@@ -47,7 +47,13 @@ impl Morph for &str {
     }
 }
 
+fn infix_precedence(token: Token) -> u32 {
+    match token {
+        _ => 0
+    }
+}
+
 // With that machinery out of the way we can get on to the actual parser implementation. Here be dragons.
 impl Parser<'_> {
-    
+
 }

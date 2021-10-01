@@ -1,63 +1,5 @@
 use crate::{span::Span, visitor::Visitor};
-use visitor_derive::Visitor;
-
-#[derive(Debug, Clone, Visitor)]
-#[visit(node = Expression)]
-pub struct UnaryExpression {
-    pub operator: UnaryOperator,
-    #[visit]
-    pub operand: Box<Expression>,
-}
-
-#[derive(Debug, Clone)]
-pub enum UnaryOperator {
-    Not,
-    Positive,
-    Negative,
-}
-
-#[derive(Debug, Clone, Visitor)]
-#[visit(node = Expression)]
-pub struct BinaryExpression {
-    pub operator: BinaryOperator,
-    #[visit]
-    pub left: Box<Expression>,
-    #[visit]
-    pub right: Box<Expression>,
-}
-
-#[derive(Debug, Clone)]
-pub enum BinaryOperator {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    LessThan,
-    LessThanOrEqual,
-    GreaterThan,
-    GreaterThanOrEqual,
-    Equal,
-    NotEqual,
-    And,
-    Or,
-}
-
-#[derive(Debug, Clone, Visitor)]
-#[visit(node = Expression)]
-pub struct IsExpression {
-    #[visit]
-    pub expression: Box<Expression>,
-    pub pattern: Pattern,
-}
-
-#[derive(Debug, Clone, Visitor)]
-#[visit(node = Expression)]
-pub struct BlockExpression {
-    #[visit]
-    pub statements: Vec<Expression>,
-    #[visit]
-    pub tail: Option<Box<Expression>>,
-}
+use codegen::{Visitor, Spanned};
 
 macro_rules! literal_impl {
     ($($vis:vis $name:ident,)+) => { literal_impl! { $($vis $name),* } };
@@ -81,7 +23,74 @@ literal_impl! {
     pub StringLiteral,
 }
 
+#[derive(Debug, Clone, Visitor, Spanned)]
+#[visit(node = Expression)]
+#[span(self.span)]
+pub struct UnaryExpression {
+    pub span: Span,
+    pub operator: UnaryOperator,
+    #[visit]
+    pub operand: Box<Expression>,
+}
+
 #[derive(Debug, Clone)]
+pub enum UnaryOperator {
+    Not,
+    Positive,
+    Negative,
+}
+
+#[derive(Debug, Clone, Visitor, Spanned)]
+#[visit(node = Expression)]
+#[span(self.span)]
+pub struct BinaryExpression {
+    pub span: Span,
+    pub operator: BinaryOperator,
+    #[visit]
+    pub left: Box<Expression>,
+    #[visit]
+    pub right: Box<Expression>,
+}
+
+#[derive(Debug, Clone)]
+pub enum BinaryOperator {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    Equal,
+    NotEqual,
+    And,
+    Or,
+}
+
+#[derive(Debug, Clone, Visitor, Spanned)]
+#[visit(node = Expression)]
+#[span(self.span)]
+pub struct IsExpression {
+    pub span: Span,
+    #[visit]
+    pub expression: Box<Expression>,
+    pub pattern: Pattern,
+}
+
+#[derive(Debug, Clone, Visitor, Spanned)]
+#[visit(node = Expression)]
+#[span(self.span)]
+pub struct BlockExpression {
+    pub span: Span,
+    #[visit]
+    pub statements: Vec<Expression>,
+    #[visit]
+    pub tail: Option<Box<Expression>>,
+}
+
+#[derive(Debug, Clone, Spanned)]
+#[span(self.0)]
 pub struct BoolLiteral(Span, bool);
 
 impl BoolLiteral {
@@ -94,14 +103,14 @@ impl BoolLiteral {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Spanned)]
 pub enum LiteralExpression {
     Integer(IntegerLiteral),
     Float(FloatLiteral),
     String(StringLiteral),
 }
 
-#[derive(Debug, Clone, Visitor)]
+#[derive(Debug, Clone, Visitor, Spanned)]
 #[visit(base)]
 pub enum Expression {
     Unary(UnaryExpression),
