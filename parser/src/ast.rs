@@ -125,6 +125,7 @@ pub enum Expression {
     Is(IsExpression),
     Block(BlockExpression),
     Literal(LiteralExpression),
+    Error(Span),
 }
 
 // Here we unfortunately run into a small spot where we're context-sensitive. I will not solve this with a lexer hack
@@ -149,7 +150,10 @@ pub struct WordPattern {
 
 #[derive(Debug, Clone, Visitor)]
 #[visit(base)]
-pub enum Pattern {}
+pub enum Pattern {
+    Word(WordPattern),
+    Error(Span),
+}
 
 #[derive(Debug, Clone, Visitor)]
 #[visit(base)]

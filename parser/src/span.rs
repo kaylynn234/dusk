@@ -60,3 +60,9 @@ impl Index<Span> for str {
         &self[index.as_range()]
     }
 }
+
+impl Spanned for Span {
+    fn span(&self) -> Span {
+        *self
+    }
+}
