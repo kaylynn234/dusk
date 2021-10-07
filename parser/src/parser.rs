@@ -1,25 +1,32 @@
+use crate::{
+    error::{ErrorBuilder, Unexpected},
+    span::SpannedToken,
+};
+
 use super::*;
 use lexer::Token;
 use logos::{Lexer, Logos};
 
 #[inline]
-fn _next_impl(lexer: &mut Lexer<'_, Token>) -> Result<(Span, Token), Error> {
+fn _next_impl(lexer: &mut Lexer<'_, Token>) -> Result<SpannedToken, Error> {
     lexer
         .next()
-        .map(|token| (lexer.span().into(), token))
-        .ok_or_else(|| Error::new(lexer.span().into(), ErrorKind::Unexpected(None)))
+        .map(|token| SpannedToken(lexer.span().into(), token))
+        .ok_or_else(|| Error::new(lexer.span().into(), ErrorKind::Simple(Unexpected::Eof)))
 }
 
-pub struct Parser<'input> {
-    lexer: Lexer<'input, Token>,
-    errors: Vec<Error>,
+pub struct Parser<'source> {
+    pub(crate) lexer: Lexer<'source, Token>,
+    pub(crate) errors: Vec<Error>,
+    pub(crate) unclosed_delimiters: Vec<SpannedToken>,
 }
 
-impl Parser<'_> {
+impl<'source> Parser<'source> {
     pub fn new(input: &str) -> Parser {
         Parser {
             lexer: Token::lexer(input),
             errors: Vec::new(),
+            unclosed_delimiters: Vec::new(),
         }
     }
 
@@ -31,45 +38,22 @@ impl Parser<'_> {
         self.lexer.source()
     }
 
-    pub fn peek(&self) -> Result<(Span, Token), Error> {
+    pub fn peek(&self) -> Result<SpannedToken, Error> {
         _next_impl(&mut self.lexer.clone())
     }
 
-    pub fn next(&mut self) -> Result<(Span, Token), Error> {
+    pub fn next(&mut self) -> Result<SpannedToken, Error> {
         _next_impl(&mut self.lexer)
     }
 
-    pub fn peek_span(&self) -> Result<Span, Error> {
-        let (span, _) = _next_impl(&mut self.lexer.clone())?;
-        Ok(span)
+    pub fn peek_matches(&mut self, expected: impl Pattern) -> Result<SpannedToken, Error> {
+        let token = self.peek()?;
+        Ok(expected.match_pattern(self, token)?)
     }
 
-    pub fn peek_token(&self) -> Result<Token, Error> {
-        let (_, token) = _next_impl(&mut self.lexer.clone())?;
-        Ok(token)
-    }
-
-    pub fn next_token(&mut self) -> Result<Token, Error> {
-        let (_, token) = _next_impl(&mut self.lexer)?;
-        Ok(token)
-    }
-
-    pub fn peek_matches<T>(&mut self, expected: T) -> Result<T::Output, Error>
-    where
-        T: Pattern,
-    {
-        let (span, token) = self.peek()?;
-        let slice = &self.source()[self.span()];
-        Ok(expected.match_pattern(span, token, slice)?.1)
-    }
-
-    pub fn expect_matches<T>(&mut self, expected: T) -> Result<T::Output, Error>
-    where
-        T: Pattern,
-    {
-        let (span, token) = self.peek()?;
-        let slice = &self.source()[self.span()];
-        let (_, result) = expected.match_pattern(span, token, slice)?;
+    pub fn expect_matches(&mut self, expected: impl Pattern) -> Result<SpannedToken, Error> {
+        let token = self.peek()?;
+        let result = expected.match_pattern(self, token)?;
         self.next()?;
 
         Ok(result)
@@ -81,6 +65,15 @@ impl Parser<'_> {
 
     pub fn measure(&self, Cursor(start): Cursor) -> Span {
         Span::new(start, self.span().end())
+    }
+
+    pub fn error<'a>(&'a mut self) -> ErrorBuilder<'a, 'source> {
+        ErrorBuilder::new(self)
+    }
+
+    /// Get a reference to the parser's errors.
+    pub fn errors(&self) -> &[Error] {
+        self.errors.as_slice()
     }
 }
 

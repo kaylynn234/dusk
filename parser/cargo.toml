@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 codegen = { path = "codegen" }
+derive_more = "0.99.0"
 lasso = "0.6.0"
 lexer = { path = "../lexer" }
 logos = "0.12.0"

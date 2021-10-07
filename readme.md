@@ -52,15 +52,14 @@ If you're on a *nix system you already know what you're doing.
 </details>
 
 ## What can I do at the moment?
-I'm rewriting things, so this isn't here at the moment. Sit tight!  
-~~Not much, really. If you clone the repo and run the following:~~
+Not much, really. If you clone the repo and run the following:
 ```sh
 cd prompt
 cargo run
 ```
-~~You'll wind up in a small interactive prompt. All this does at the moment is run the parser on a snippet of code and
-print the resulting AST to stdout, but its capabilities will grow in the future. I'm hoping that eventually I'll be
-able to turn it into something similar to `GHCI` or `iex`.~~
+You'll wind up in a small interactive prompt. All this does at the moment is run the parser on a snippet of code and
+print the resulting AST (and any errors raised) to stdout, but its capabilities will grow in the future. I'm hoping that
+eventually I'll be able to turn it into something similar to `GHCI` or `iex`.
 
 ## Where is this going to go?
 I have a lot of big ambitions but I decided that it was better to start small for the time being. Later down the track

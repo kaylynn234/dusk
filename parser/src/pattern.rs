@@ -1,57 +1,38 @@
+use crate::span::{Spanned, SpannedToken};
+
 use super::*;
 use lexer::Token;
 
 pub trait Pattern {
-    type Output;
-
-    fn match_pattern(
-        self,
-        span: Span,
-        token: Token,
-        slice: &str,
-    ) -> Result<(Span, Self::Output), Error>;
+    fn match_pattern(self, parser: &Parser, token: SpannedToken) -> Result<SpannedToken, Error>;
 }
 
 impl Pattern for Token {
-    type Output = Token;
-
-    fn match_pattern(
-        self,
-        span: Span,
-        token: Token,
-        slice: &str,
-    ) -> Result<(Span, Self::Output), Error> {
-        if self == token {
-            return Ok((span, token));
+    fn match_pattern(self, parser: &Parser, token: SpannedToken) -> Result<SpannedToken, Error> {
+        if self == token.kind() {
+            return Ok(token);
         }
 
         let diagnostic = Diagnostic::Mismatch {
-            expected: self.into_diagnostic(slice),
-            found: token.into_diagnostic(slice),
+            expected: self.into_diagnostic(parser),
+            found: token.into_diagnostic(parser),
         };
 
-        Err(Error::new(span, ErrorKind::Labelled(diagnostic)))
+        Err(Error::new(token.span(), ErrorKind::Diagnostic(diagnostic)))
     }
 }
 
 impl Pattern for &str {
-    type Output = Token;
-
-    fn match_pattern(
-        self,
-        span: Span,
-        token: Token,
-        slice: &str,
-    ) -> Result<(Span, Self::Output), Error> {
-        if token == Token::Identifier && self == slice {
-            return Ok((span, token));
+    fn match_pattern(self, parser: &Parser, token: SpannedToken) -> Result<SpannedToken, Error> {
+        if token.kind() == Token::Identifier && self == &parser.source()[token.span()] {
+            return Ok(token);
         }
 
         let diagnostic = Diagnostic::Mismatch {
-            expected: DiagnosticToken::Word(self.to_owned()),
-            found: token.into_diagnostic(slice),
+            expected: DiagnosticTerm::Word(self.to_owned()),
+            found: token.into_diagnostic(parser),
         };
 
-        Err(Error::new(span, ErrorKind::Labelled(diagnostic)))
+        Err(Error::new(token.span(), ErrorKind::Diagnostic(diagnostic)))
     }
 }

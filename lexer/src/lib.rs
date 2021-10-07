@@ -86,43 +86,43 @@ pub enum Token {
     #[token("/=")]
     SlashEquals,
 
-    #[category(BinaryOperator, UnaryOperator, Sum)]
+    #[category(BinaryOperator, UnaryOperator, SumOperator)]
     #[token("+")]
     Plus,
 
-    #[category(BinaryOperator, UnaryOperator, Sum)]
+    #[category(BinaryOperator, UnaryOperator, SumOperator)]
     #[token("-")]
     Minus,
 
-    #[category(BinaryOperator, Product)]
+    #[category(BinaryOperator, ProductOperator)]
     #[token("*")]
     Asterisk,
 
-    #[category(BinaryOperator, Product)]
+    #[category(BinaryOperator, ProductOperator)]
     #[token("/")]
     Slash,
 
-    #[category(BinaryOperator, ValueComparison)]
+    #[category(BinaryOperator, ComparisonOperator)]
     #[token("<")]
     Lesser,
 
-    #[category(BinaryOperator, ValueComparison)]
+    #[category(BinaryOperator, ComparisonOperator)]
     #[token("<=")]
     LesserEqual,
 
-    #[category(BinaryOperator, ValueComparison)]
+    #[category(BinaryOperator, ComparisonOperator)]
     #[token(">")]
     Greater,
 
-    #[category(BinaryOperator, ValueComparison)]
+    #[category(BinaryOperator, ComparisonOperator)]
     #[token(">=")]
     GreaterEqual,
 
-    #[category(BinaryOperator, ValueComparison)]
+    #[category(BinaryOperator, ComparisonOperator)]
     #[token("==")]
     EqualsEquals,
 
-    #[category(BinaryOperator, ValueComparison)]
+    #[category(BinaryOperator, ComparisonOperator)]
     #[token("!=")]
     NotEqual,
 
@@ -150,11 +150,11 @@ pub enum Token {
     #[token("let")]
     Let,
 
-    #[category(Keyword, Atom)]
+    #[category(Keyword, Literal)]
     #[token("True")]
     True,
 
-    #[category(Keyword, Atom)]
+    #[category(Keyword, Literal)]
     #[token("False")]
     False,
 
@@ -162,19 +162,18 @@ pub enum Token {
     #[token("module")]
     Module,
 
-    #[category(Atom)]
     #[regex("[_a-zA-Z]+[_a-zA-Z0-9]*", priority = 2)]
     Identifier,
 
-    #[category(Atom)]
+    #[category(Literal)]
     #[regex(r#""([^"\\]*(\\.[^"\\]*)*)""#)]
     String,
 
-    #[category(Atom)]
+    #[category(Literal)]
     #[regex(r"[_0-9]+")]
     Integer,
 
-    #[category(Atom)]
+    #[category(Literal)]
     #[regex(r"[_0-9]+\.[0-9_]+")]
     Float,
 
@@ -245,7 +244,7 @@ impl Display for Token {
 
 #[cfg(never)]
 macro_rules! token_category {
-    (Product) => {
+    (ProductOperator) => {
         Token::SymbolAsterisk | Token::SymbolSlash
     }; // ...
 }

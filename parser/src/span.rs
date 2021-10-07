@@ -1,5 +1,7 @@
 use std::ops::{Index, Range};
 
+use lexer::Token;
+
 /// Represents a type that occupies an input span
 pub trait Spanned {
     fn span(&self) -> Span;
@@ -39,6 +41,11 @@ impl Span {
     pub fn end(&self) -> usize {
         self.end
     }
+
+    /// Return the union of two spans.
+    pub fn union(&self, other: Span) -> Span {
+        Span::new(self.start().min(other.start()), self.end().max(other.end()))
+    }
 }
 
 impl From<Range<usize>> for Span {
@@ -64,5 +71,21 @@ impl Index<Span> for str {
 impl Spanned for Span {
     fn span(&self) -> Span {
         *self
+    }
+}
+
+/// A token with associated span information.
+#[derive(Debug, Clone, Copy)]
+pub struct SpannedToken(pub Span, pub Token);
+
+impl SpannedToken {
+    pub fn kind(&self) -> Token {
+        self.1
+    }
+}
+
+impl Spanned for SpannedToken {
+    fn span(&self) -> Span {
+        self.0
     }
 }

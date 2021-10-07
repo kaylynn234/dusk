@@ -1,39 +1,49 @@
 use parser::Parser;
-use std::{error::Error, io, io::prelude::*, sync::Arc};
+use std::{error::Error, io, io::prelude::*};
 
-const PROMPT_NEW: &[u8] = b">>> ";
-const PROMPT_INCOMPLETE: &[u8] = b"... ";
+enum Status {
+    Incomplete,
+    New,
+}
+
+impl Status {
+    fn prompt(&self) -> &'static str {
+        match self {
+            Status::Incomplete => "... ",
+            Status::New => ">>> ",
+        }
+    }
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut input = String::new();
-    let mut current_prompt = PROMPT_NEW;
+    let mut status = Status::New;
 
     loop {
-        io::stdout().write_all(current_prompt)?;
+        io::stdout().write_all(status.prompt().as_bytes())?;
         io::stdout().flush()?;
         io::stdin().read_line(&mut input)?;
 
         // If we receive 2 empty lines, we should stop accepting input and parse.
-        current_prompt = {
-            if input.lines().next_back().map_or(false, str::is_empty) {
-                parse_and_run(&input);
-                input.clear();
-                PROMPT_NEW
-            } else {
-                PROMPT_INCOMPLETE
-            }
+        status = match input.lines().last().map_or(false, str::is_empty) {
+            true => Status::New,
+            false => Status::Incomplete,
         };
+
+        if let Status::New = status {
+            parse_and_run(&input);
+            input.clear();
+            input.shrink_to_fit();
+        }
     }
 }
 
 fn parse_and_run(input: &str) {
-    // This is gross.
-    match Parser::new(&Arc::new(input.trim_end().to_owned()), "<stdin>".to_owned()).parse() {
-        Ok(output) => {
-            for node in output {
-                println!("{:#?}", node)
-            }
-        }
-        Err(error) => println!("{}", error),
+    let mut parser = Parser::new(input);
+    let result = parser.parse();
+    println!("{:#?}", result);
+
+    for error in parser.errors() {
+        println!("{}", error.details());
     }
 }

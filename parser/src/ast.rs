@@ -1,49 +1,55 @@
-use crate::{span::Span, visitor::Visitor};
-use codegen::{Visitor, Spanned};
-
-macro_rules! literal_impl {
-    ($($vis:vis $name:ident,)+) => { literal_impl! { $($vis $name),* } };
-    ($($vis:vis $name:ident),*) => {
-        $(
-            #[derive(Debug, Clone)]
-            $vis struct $name(Span);
-
-            impl $crate::span::Spanned for $name {
-                fn span(&self) -> $crate::span::Span {
-                    self.0
-                }
-            }
-        )*
-    };
-}
+use crate::{
+    error::ErrorVariant,
+    span::{Span, Spanned, SpannedToken},
+    visitor::Visitor,
+};
+use codegen::{Spanned, Visitor};
+use derive_more::{Display, From};
+use lexer::Token;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Debug, Clone, Spanned)]
 #[span(self.span)]
 pub struct OperatorInfo<T> {
     operator: T,
-    span: Span
+    span: Span,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Display, Clone)]
 pub enum UnaryOperator {
+    #[display(fmt = "not")]
     Not,
+    #[display(fmt = "+")]
     Positive,
+    #[display(fmt = "-")]
     Negative,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Display, Clone)]
 pub enum BinaryOperator {
+    #[display(fmt = "+")]
     Add,
+    #[display(fmt = "-")]
     Subtract,
+    #[display(fmt = "*")]
     Multiply,
+    #[display(fmt = "/")]
     Divide,
+    #[display(fmt = "<")]
     LessThan,
+    #[display(fmt = "<=")]
     LessThanOrEqual,
+    #[display(fmt = ">")]
     GreaterThan,
+    #[display(fmt = ">=")]
     GreaterThanOrEqual,
+    #[display(fmt = "==")]
     Equal,
+    #[display(fmt = "!=")]
     NotEqual,
+    #[display(fmt = "and")]
     And,
+    #[display(fmt = "or")]
     Or,
 }
 
@@ -90,10 +96,27 @@ pub struct BlockExpression {
     pub tail: Option<Box<Expression>>,
 }
 
+macro_rules! literal_impl {
+    ($($vis:vis $name:ident,)+) => { literal_impl! { $($vis $name),* } };
+    ($($vis:vis $name:ident),*) => {
+        $(
+            #[derive(Debug, Clone)]
+            $vis struct $name(Span);
+
+            impl $crate::span::Spanned for $name {
+                fn span(&self) -> $crate::span::Span {
+                    self.0
+                }
+            }
+        )*
+    };
+}
+
 literal_impl! {
     pub IntegerLiteral,
     pub FloatLiteral,
     pub StringLiteral,
+    pub Identifer,
 }
 
 #[derive(Debug, Clone, Spanned)]
@@ -101,23 +124,20 @@ literal_impl! {
 pub struct BoolLiteral(Span, bool);
 
 impl BoolLiteral {
-    pub fn span(&self) -> Span {
-        self.0
-    }
-
     pub fn value(&self) -> bool {
         self.1
     }
 }
 
-#[derive(Debug, Clone, Spanned)]
+#[derive(Debug, Clone, From, Spanned)]
 pub enum LiteralExpression {
+    Bool(BoolLiteral),
     Integer(IntegerLiteral),
     Float(FloatLiteral),
     String(StringLiteral),
 }
 
-#[derive(Debug, Clone, Visitor, Spanned)]
+#[derive(Debug, Clone, From, Visitor, Spanned)]
 #[visit(base)]
 pub enum Expression {
     Unary(UnaryExpression),
@@ -125,6 +145,7 @@ pub enum Expression {
     Is(IsExpression),
     Block(BlockExpression),
     Literal(LiteralExpression),
+    Identifier(Identifer),
     Error(Span),
 }
 
@@ -165,4 +186,117 @@ pub enum PathAccess {
     Scope,
     // `.` access
     Member,
+}
+
+impl ErrorVariant for Expression {
+    fn error(span: Span) -> Self {
+        Expression::Error(span)
+    }
+
+    fn is_error(&self) -> bool {
+        matches!(self, Expression::Error(_))
+    }
+}
+
+#[derive(Debug)]
+pub struct TryFromTokenError {
+    token: Token,
+    type_name: &'static str,
+}
+
+impl TryFromTokenError {
+    pub fn token(&self) -> Token {
+        self.token
+    }
+
+    pub fn type_name(&self) -> &'static str {
+        self.type_name
+    }
+}
+
+impl TryFrom<Token> for UnaryOperator {
+    type Error = TryFromTokenError;
+
+    fn try_from(value: Token) -> Result<Self, Self::Error> {
+        match value {
+            Token::Not => Ok(UnaryOperator::Not),
+            Token::Plus => Ok(UnaryOperator::Positive),
+            Token::Minus => Ok(UnaryOperator::Negative),
+            token => Err(TryFromTokenError {
+                token,
+                type_name: "UnaryOperator",
+            }),
+        }
+    }
+}
+
+impl TryFrom<Token> for BinaryOperator {
+    type Error = TryFromTokenError;
+
+    fn try_from(value: Token) -> Result<Self, Self::Error> {
+        match value {
+            Token::Plus => Ok(BinaryOperator::Add),
+            Token::Minus => Ok(BinaryOperator::Subtract),
+            Token::Asterisk => Ok(BinaryOperator::Multiply),
+            Token::Slash => Ok(BinaryOperator::Divide),
+            Token::Lesser => Ok(BinaryOperator::LessThan),
+            Token::LesserEqual => Ok(BinaryOperator::LessThanOrEqual),
+            Token::Greater => Ok(BinaryOperator::GreaterThan),
+            Token::GreaterEqual => Ok(BinaryOperator::GreaterThanOrEqual),
+            Token::EqualsEquals => Ok(BinaryOperator::Equal),
+            Token::NotEqual => Ok(BinaryOperator::NotEqual),
+            Token::And => Ok(BinaryOperator::And),
+            Token::Or => Ok(BinaryOperator::Or),
+            token => Err(TryFromTokenError {
+                token,
+                type_name: "BinaryOperator",
+            }),
+        }
+    }
+}
+
+impl<T> TryFrom<SpannedToken> for OperatorInfo<T>
+where
+    T: TryFrom<Token, Error = TryFromTokenError>,
+{
+    type Error = TryFromTokenError;
+
+    fn try_from(value: SpannedToken) -> Result<Self, Self::Error> {
+        Ok(OperatorInfo {
+            operator: value.kind().try_into()?,
+            span: value.span(),
+        })
+    }
+}
+
+impl TryFrom<SpannedToken> for LiteralExpression {
+    type Error = TryFromTokenError;
+
+    fn try_from(value: SpannedToken) -> Result<Self, Self::Error> {
+        match value.kind() {
+            Token::True => Ok(BoolLiteral(value.span(), true).into()),
+            Token::False => Ok(BoolLiteral(value.span(), false).into()),
+            Token::Integer => Ok(IntegerLiteral(value.span()).into()),
+            Token::Float => Ok(FloatLiteral(value.span()).into()),
+            Token::String => Ok(StringLiteral(value.span()).into()),
+            token => Err(TryFromTokenError {
+                token,
+                type_name: "LiteralExpression",
+            }),
+        }
+    }
+}
+
+impl TryFrom<SpannedToken> for Identifer {
+    type Error = TryFromTokenError;
+
+    fn try_from(value: SpannedToken) -> Result<Self, Self::Error> {
+        match value.kind() {
+            Token::Identifier => Ok(Identifer(value.span())),
+            token => Err(TryFromTokenError {
+                token,
+                type_name: "Identifier",
+            }),
+        }
+    }
 }
