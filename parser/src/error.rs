@@ -8,8 +8,8 @@ use derive_more::{Display, From};
 use lexer::Token;
 
 pub struct Error {
-    location: Span,
-    kind: ErrorKind,
+    pub(crate) location: Span,
+    pub(crate) kind: ErrorKind,
 }
 
 impl Error {
@@ -112,11 +112,29 @@ impl From<Option<Token>> for Unexpected {
     }
 }
 
+fn format_terms(terms: &[DiagnosticTerm]) -> Cow<'static, str> {
+    match terms {
+        [] => "no tokens".into(),
+        [first, second] => format!("{} or {}", first, second).into(),
+        [head @ .., tail] => {
+            let mut string = "either ".to_owned();
+            string.extend(head.iter().map(|term| format!("{}, ", term)));
+            string.push_str(&format!("or {}", tail));
+            string.into()
+        }
+    }
+}
+
 // This is essentially just an error-reporting type that's like `Token` but can provide additional information for use
 // in diagnostics.
 #[derive(Debug, Display)]
 pub enum DiagnosticTerm {
+    #[display(fmt = "{}", "format_terms(&_0)")]
+    AnyOf(Vec<DiagnosticTerm>),
+    #[display(fmt = r#""{}""#, "_0")]
     Word(String),
+    #[display(fmt = r#"`{}`"#, "_0")]
+    Symbol(String),
     Token(Token),
 }
 
@@ -145,6 +163,7 @@ pub trait IntoDiagnostic {
 impl IntoDiagnostic for SpannedToken {
     fn into_diagnostic(self, parser: &Parser) -> DiagnosticTerm {
         match self.kind() {
+            Token::Error => DiagnosticTerm::Symbol(parser.source()[self.span()].to_owned()),
             Token::Identifier => DiagnosticTerm::Word(parser.source()[self.span()].to_owned()),
             token => DiagnosticTerm::Token(token),
         }
@@ -166,6 +185,22 @@ impl IntoDiagnostic for &str {
 impl IntoDiagnostic for String {
     fn into_diagnostic(self, _: &Parser) -> DiagnosticTerm {
         DiagnosticTerm::Word(self)
+    }
+}
+
+impl<T: IntoDiagnostic + Clone> IntoDiagnostic for &[T] {
+    fn into_diagnostic(self, parser: &Parser) -> DiagnosticTerm {
+        self.to_owned().into_diagnostic(parser)
+    }
+}
+
+impl<T: IntoDiagnostic> IntoDiagnostic for Vec<T> {
+    fn into_diagnostic(self, parser: &Parser) -> DiagnosticTerm {
+        DiagnosticTerm::AnyOf(
+            self.into_iter()
+                .map(|value| value.into_diagnostic(parser))
+                .collect(),
+        )
     }
 }
 
@@ -199,19 +234,4 @@ impl SpannedTokenExt for Result<SpannedToken, Error> {
     fn span(self) -> Result<Span, Error> {
         self.map(|token| token.span())
     }
-}
-
-#[macro_export]
-macro_rules! bail {
-    ($expr:expr) => {{
-        let expr = $expr;
-        use $crate::span::Spanned;
-
-        match expr {
-            ::std::result::Result::Ok(ok) => ok,
-            ::std::result::Result::Err(error) => {
-                return $crate::error::ErrorVariant::error(error.span())
-            }
-        }
-    }};
 }

@@ -34,22 +34,34 @@ pub fn token_info_derive(input: TokenStream) -> TokenStream {
 
     let enum_name = item.ident;
     let mut category_output = Vec::new();
+    let mut category_slice_output = Vec::new();
 
     for (category_name, fields) in category_results {
-        let output_rule = quote! {
+        let category_output_rule = quote! {
             (#category_name) => {#(#enum_name::#fields) |*};
         };
 
-        category_output.push(output_rule);
+        let category_slice_output_rule = quote! {
+            (#category_name) => {&[#(#enum_name::#fields),*]};
+        };
+
+        category_output.push(category_output_rule);
+        category_slice_output.push(category_slice_output_rule);
     }
 
     let lower_name = enum_name.to_string().to_lowercase();
     let category_macro_name = quote::format_ident!("{}_category", lower_name);
+    let category_slice_macro_name = quote::format_ident!("{}_category_slice", lower_name);
 
     let tokens = quote! {
         #[macro_export]
         macro_rules! #category_macro_name {
             #(#category_output)*
+        }
+
+        #[macro_export]
+        macro_rules! #category_slice_macro_name {
+            #(#category_slice_output)*
         }
     };
 

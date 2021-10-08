@@ -1,15 +1,33 @@
 use crate::{
-    bail,
     error::ErrorVariant,
     span::{Spanned, SpannedToken},
     token_info::Precedence,
     BinaryExpression, Expression, Parser, SpannedTokenExt, TokenInfoExt, UnaryExpression,
 };
-use lexer::{token_category, Token};
+use lexer::{token_category, token_category_slice, Token};
 use std::convert::TryInto;
 
 // Something really bugs me about the actual parser implementation being in the same file as its definition, and I don't
 // know why. I know it's a bit of a strange choice, but that's why this is a different module.
+
+const BEGINS_EXPRESSION: &'static [Token] = token_category_slice![FirstTokenOfExpression];
+
+macro_rules! bail {
+    ($self:expr => $expr:expr ) => {{
+        let expr = $expr;
+        use $crate::span::Spanned;
+
+        match expr {
+            ::std::result::Result::Ok(ok) => ok,
+            ::std::result::Result::Err(error) => {
+                let span = error.span();
+                $self.errors.push(error);
+
+                return $crate::error::ErrorVariant::error(span);
+            }
+        }
+    }};
+}
 
 impl Parser<'_> {
     pub fn parse(&mut self) -> Expression {
@@ -23,11 +41,11 @@ impl Parser<'_> {
     }
 
     fn parse_expression_with(&mut self, precedence: Precedence) -> Expression {
-        let token = bail!(self.next());
+        let token = bail!(self => self.expect_matches(BEGINS_EXPRESSION));
         let mut expr = self.parse_prefix_expression(token);
 
         while self.can_continue(precedence) {
-            let token = bail!(self.next());
+            let token = bail!(self => self.next());
             expr = self.parse_infix_expression(expr, token);
         }
 
@@ -49,12 +67,7 @@ impl Parser<'_> {
             // so the unwrap will not fail.
             token_category![Literal] => Expression::Literal(token.try_into().unwrap()),
             Token::Identifier => Expression::Identifier(token.try_into().unwrap()),
-            _ => self
-                .error()
-                .location(token.span())
-                .mismatch("expression", token)
-                .finish()
-                .unwrap(),
+            _ => unreachable!()
         }
     }
 
@@ -101,7 +114,19 @@ impl Parser<'_> {
                 self.unclosed_delimiters.pop();
                 expression
             }
-            Err(error) => ErrorVariant::error(error.span()),
+            Err(error) => ErrorVariant::error(token.span().union(error.span())),
+        }
+    }
+
+    // TODO: finish writing this
+    fn parse_call(&mut self, token: SpannedToken) -> Expression {
+        self.unclosed_delimiters.push(token);
+
+        loop {
+            let token = bail!(self => self.next());
+            if token.kind() == Token::Identifier {
+                
+            }
         }
     }
 

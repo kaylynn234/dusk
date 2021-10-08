@@ -119,22 +119,38 @@ literal_impl! {
     pub Identifer,
 }
 
-#[derive(Debug, Clone, Spanned)]
-#[span(self.0)]
-pub struct BoolLiteral(Span, bool);
-
-impl BoolLiteral {
-    pub fn value(&self) -> bool {
-        self.1
-    }
-}
-
 #[derive(Debug, Clone, From, Spanned)]
 pub enum LiteralExpression {
-    Bool(BoolLiteral),
     Integer(IntegerLiteral),
     Float(FloatLiteral),
     String(StringLiteral),
+}
+
+#[derive(Debug, Clone, Visitor, Spanned)]
+#[visit(node = Expression)]
+#[span(self.span)]
+pub struct Call {
+    span: Span,
+    #[visit]
+    operand: Box<Expression>,
+    // TODO: visit for enums
+    arguments: Vec<Argument>,
+}
+
+#[derive(Debug, Clone, Visitor, Spanned)]
+#[visit(node = Expression)]
+#[span(self.span)]
+pub struct NamedArgument {
+    span: Span,
+    name: Identifer,
+    #[visit]
+    expression: Box<Expression>,
+}
+
+#[derive(Debug, Clone, Spanned)]
+pub enum Argument {
+    Named(NamedArgument),
+    Positional(Expression)
 }
 
 #[derive(Debug, Clone, From, Visitor, Spanned)]
@@ -146,6 +162,7 @@ pub enum Expression {
     Block(BlockExpression),
     Literal(LiteralExpression),
     Identifier(Identifer),
+    Call(Call),
     Error(Span),
 }
 
@@ -274,8 +291,6 @@ impl TryFrom<SpannedToken> for LiteralExpression {
 
     fn try_from(value: SpannedToken) -> Result<Self, Self::Error> {
         match value.kind() {
-            Token::True => Ok(BoolLiteral(value.span(), true).into()),
-            Token::False => Ok(BoolLiteral(value.span(), false).into()),
             Token::Integer => Ok(IntegerLiteral(value.span()).into()),
             Token::Float => Ok(FloatLiteral(value.span()).into()),
             Token::String => Ok(StringLiteral(value.span()).into()),

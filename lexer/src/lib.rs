@@ -1,241 +1,223 @@
-use std::fmt::Display;
-
+use derive_more::Display;
 use logos::Logos;
 use token_macro_derive::TokenInfo;
 
-#[derive(TokenInfo, Logos, Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(TokenInfo, Logos, Debug, Display, PartialEq, Eq, Clone, Copy, Hash)]
 #[repr(u8)]
 pub enum Token {
-    #[category(Symbol)]
+    #[category(Symbol, FirstTokenOfExpression)]
     #[token("{")]
+    #[display(fmt = "`{{`")]
     OpeningBrace,
 
     #[category(Symbol, ClosingBracket)]
     #[token("}")]
+    #[display(fmt = "`}}`")]
     ClosingBrace,
 
-    #[category(Symbol)]
+    #[category(Symbol, FirstTokenOfExpression)]
     #[token("(")]
+    #[display(fmt = "`(`")]
     OpeningParen,
 
     #[category(Symbol, ClosingBracket)]
     #[token(")")]
+    #[display(fmt = "`)`")]
     ClosingParen,
 
-    #[category(Symbol)]
+    #[category(Symbol, FirstTokenOfExpression)]
     #[token("[")]
+    #[display(fmt = "`[`")]
     OpeningBracket,
 
     #[category(Symbol, ClosingBracket)]
     #[token("]")]
+    #[display(fmt = "`]`")]
     ClosingBracket,
 
     #[category(Symbol)]
     #[token(",")]
+    #[display(fmt = "`,`")]
     Comma,
 
     #[category(Symbol, Path)]
     #[token(".")]
+    #[display(fmt = "`.`")]
     Dot,
 
     #[category(Symbol)]
     #[token(":")]
+    #[display(fmt = "`:`")]
     Colon,
 
     #[category(Symbol, Path)]
     #[token("::")]
+    #[display(fmt = "`::`")]
     ColonColon,
 
     #[category(Symbol)]
     #[token(";")]
+    #[display(fmt = "`;`")]
     Semicolon,
 
     #[category(Symbol)]
     #[token("->")]
+    #[display(fmt = "`->`")]
     Arrow,
 
     #[category(Symbol)]
     #[token("=>")]
+    #[display(fmt = "`=>`")]
     FatArrow,
 
     #[category(Symbol)]
     #[token("#")]
+    #[display(fmt = "`#`")]
     Hash,
 
     #[category(Symbol)]
     #[token("!")]
+    #[display(fmt = "`!`")]
     Exclamation,
 
     #[category(Symbol)]
     #[token("=")]
+    #[display(fmt = "`=`")]
     Equals,
 
     #[category(CompoundOperator)]
     #[token("+=")]
+    #[display(fmt = "`+=`")]
     PlusEquals,
 
     #[category(CompoundOperator)]
     #[token("-=")]
+    #[display(fmt = "`-=`")]
     MinusEquals,
 
     #[category(CompoundOperator)]
     #[token("*=")]
+    #[display(fmt = "`*=`")]
     AsteriskEquals,
 
     #[category(CompoundOperator)]
     #[token("/=")]
+    #[display(fmt = "`/=`")]
     SlashEquals,
 
-    #[category(BinaryOperator, UnaryOperator, SumOperator)]
+    #[category(BinaryOperator, UnaryOperator, SumOperator, FirstTokenOfExpression)]
     #[token("+")]
+    #[display(fmt = "`+`")]
     Plus,
 
-    #[category(BinaryOperator, UnaryOperator, SumOperator)]
+    #[category(BinaryOperator, UnaryOperator, SumOperator, FirstTokenOfExpression)]
     #[token("-")]
+    #[display(fmt = "`-`")]
     Minus,
 
     #[category(BinaryOperator, ProductOperator)]
     #[token("*")]
+    #[display(fmt = "`*`")]
     Asterisk,
 
     #[category(BinaryOperator, ProductOperator)]
     #[token("/")]
+    #[display(fmt = "`/`")]
     Slash,
 
     #[category(BinaryOperator, ComparisonOperator)]
     #[token("<")]
+    #[display(fmt = "`<`")]
     Lesser,
 
     #[category(BinaryOperator, ComparisonOperator)]
     #[token("<=")]
+    #[display(fmt = "`<=`")]
     LesserEqual,
 
     #[category(BinaryOperator, ComparisonOperator)]
     #[token(">")]
+    #[display(fmt = "`>`")]
     Greater,
 
     #[category(BinaryOperator, ComparisonOperator)]
     #[token(">=")]
+    #[display(fmt = "`>=`")]
     GreaterEqual,
 
     #[category(BinaryOperator, ComparisonOperator)]
     #[token("==")]
+    #[display(fmt = "`==`")]
     EqualsEquals,
 
     #[category(BinaryOperator, ComparisonOperator)]
     #[token("!=")]
+    #[display(fmt = "`!=`")]
     NotEqual,
 
     #[category(BinaryOperator)]
     #[token("and")]
+    #[display(fmt = "the keyword `and`")]
     And,
 
     #[category(BinaryOperator)]
     #[token("or")]
+    #[display(fmt = "the keyword `or`")]
     Or,
 
-    #[category(UnaryOperator)]
+    #[category(UnaryOperator, FirstTokenOfExpression)]
     #[token("not")]
+    #[display(fmt = "the keyword `not`")]
     Not,
 
     #[category(Keyword, ItemKeyword)]
     #[token("struct")]
+    #[display(fmt = "the keyword `struct`")]
     Struct,
 
     #[category(Keyword, ItemKeyword)]
     #[token("fn")]
+    #[display(fmt = "the keyword `fn`")]
     Function,
 
     #[category(Keyword)]
     #[token("let")]
+    #[display(fmt = "the keyword `let`")]
     Let,
-
-    #[category(Keyword, Literal)]
-    #[token("True")]
-    True,
-
-    #[category(Keyword, Literal)]
-    #[token("False")]
-    False,
 
     #[category(Keyword)]
     #[token("module")]
+    #[display(fmt = "the keyword `module`")]
     Module,
 
+    #[category(FirstTokenOfExpression)]
     #[regex("[_a-zA-Z]+[_a-zA-Z0-9]*", priority = 2)]
+    #[display(fmt = "an identifier")]
     Identifier,
 
-    #[category(Literal)]
+    #[category(Literal, FirstTokenOfExpression)]
     #[regex(r#""([^"\\]*(\\.[^"\\]*)*)""#)]
+    #[display(fmt = "a string literal")]
     String,
 
-    #[category(Literal)]
+    #[category(Literal, FirstTokenOfExpression)]
     #[regex(r"[_0-9]+")]
+    #[display(fmt = "an integer literal")]
     Integer,
 
-    #[category(Literal)]
+    #[category(Literal, FirstTokenOfExpression)]
     #[regex(r"[_0-9]+\.[0-9_]+")]
+    #[display(fmt = "a float literal")]
     Float,
 
     #[regex(r"//[^\n]*", logos::skip)]
+    #[display(fmt = "a comment")]
     LineComment,
 
     #[error]
     #[regex(r"[ \t\n\f\s]+", logos::skip)]
+    #[display(fmt = "<error>")]
     Error,
-}
-
-impl Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Token::*;
-        f.write_str(match self {
-            OpeningBrace => "`{`",
-            ClosingBrace => "`}`",
-            OpeningParen => "`(`",
-            ClosingParen => "`)`",
-            OpeningBracket => "`[`",
-            ClosingBracket => "`]`",
-            Comma => "`,`",
-            Dot => "`.`",
-            Colon => "`:`",
-            ColonColon => "`::`",
-            Semicolon => "`;`",
-            Arrow => "`->`",
-            FatArrow => "`=>`",
-            Hash => "`#`",
-            Exclamation => "`!`",
-            Equals => "`=`",
-            PlusEquals => "`+=`",
-            MinusEquals => "`-=`",
-            AsteriskEquals => "`*=`",
-            SlashEquals => "`/=`",
-            Plus => "`+`",
-            Minus => "`-`",
-            Asterisk => "`*`",
-            Slash => "`/`",
-            Lesser => "`<`",
-            LesserEqual => "`<=`",
-            Greater => "`>`",
-            GreaterEqual => "`>=`",
-            EqualsEquals => "`==`",
-            NotEqual => "`!=`",
-            And => "keyword `and`",
-            Or => "keyword `or`",
-            Not => "keyword `not`",
-            Struct => "keyword `struct`",
-            Function => "keyword `fn`",
-            Let => "keyword `let`",
-            True => "keyword `True`",
-            False => "keyword `False`",
-            Module => "keyword `module`",
-            Identifier => "identifier",
-            String => "string",
-            Integer => "integer",
-            Float => "float",
-            LineComment => "comment",
-            Error => "<error>",
-        })
-    }
 }
 
 // You may be wondering something along the lines of "what the hell how is this macro here and where does it come from"
@@ -251,6 +233,17 @@ macro_rules! token_category {
 
 // Given a category name, this macro expands to a pattern that matches the enum variants in that category. It exists
 // exclusively to make some parts of the codebase prettier.
+
+// It also emits a `macro_rules!` macro named `token_category_slice`, which looks a bit similar to the below:
+
+#[cfg(never)]
+macro_rules! token_category {
+    (ProductOperator) => {
+        &[Token::SymbolAsterisk, Token::SymbolSlash]
+    }; // ...
+}
+
+// Given a category name, this macro expands to a slice containing the enum variants in that category.
 
 #[cfg(test)]
 mod tests {
